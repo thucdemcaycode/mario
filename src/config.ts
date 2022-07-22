@@ -1,29 +1,31 @@
-import { LoadScene } from './scenes/LoadScene';
-import { GameScene } from './scenes/GameScene';
-import { HUDScene } from './scenes/HudScene';
-import { StartScene } from './scenes/StartScene';
-import { LevelScene } from './scenes/LevelScene';
-import { OverScene } from './scenes/OverScene';
+import { GameScene } from "./scenes/GameScene";
+import { BootScene } from "./scenes/BootScene";
+import { OverMenu } from "./scenes/OverMenu";
+import { HUDScene } from "./scenes/HUDScene";
 
 export const GameConfig: Phaser.Types.Core.GameConfig = {
-    title: 'Super Mario Land',
-    url: 'https://github.com/digitsensitive/phaser3-typescript',
-    version: '2.0',
-    width: 1200,
-    height: 700,
-    type: Phaser.AUTO,
-    parent: 'game',
-    scene: [LoadScene, StartScene, LevelScene, HUDScene, GameScene, OverScene],
-    input: {
-        keyboard: true
+  title: "Fish.io",
+  version: "1.0.0",
+  width: 840,
+  height: 380,
+  zoom: 1,
+  type: Phaser.AUTO,
+
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+  },
+  parent: "game",
+  input: {
+    keyboard: true,
+    mouse: true,
+  },
+  disableContextMenu: true,
+  physics: {
+    default: "arcade",
+    arcade: {
+      debug: false,
     },
-    physics: {
-        default: 'arcade',
-        arcade: {
-            gravity: { y: 550 },
-            debug: false
-        }
-    },
-    backgroundColor: '#f8f8f8',
-    render: { pixelArt: true, antialias: false }
+  },
+  scene: [BootScene, HUDScene, GameScene, OverMenu],
 };

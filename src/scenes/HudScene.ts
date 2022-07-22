@@ -1,68 +1,125 @@
+import { Constants } from "../helpers/Contants"
+
 export class HUDScene extends Phaser.Scene {
-    private textElements: Map<string, Phaser.GameObjects.BitmapText>;
-    private timer: Phaser.Time.TimerEvent;
+    private textElements: Map<string, Phaser.GameObjects.Text>
+
+    private totalFish: number
+
+    private rankingBoard: { [key: string]: number }
+    private leaders: (string | number)[][]
 
     constructor() {
         super({
-            key: 'HUDScene'
-        });
+            key: "HUDScene"
+        })
     }
 
     create(): void {
+        this.createTexts()
+
+        this.createVariables()
+
+        this.eventListener()
+    }
+
+    private createTexts() {
         this.textElements = new Map([
-            ['LIVES', this.addText(0, 0, `MARIOx ${this.registry.get('lives')}`)],
-            ['WORLDTIME', this.addText(270, 0, `${this.registry.get('worldTime')}`)],
-            ['SCORE', this.addText(30, 30, `${this.registry.get('score')}`)],
-            ['COINS', this.addText(210, 30, `${this.registry.get('coins')}`)],
-            ['WORLD', this.addText(296, 30, `${this.registry.get('world')}`)],
-            ['TIME', this.addText(460, 30, `${this.registry.get('time')}`)]
-        ]);
-
-        // create events
-        const level = this.scene.get('GameScene');
-        level.events.on('coinsChanged', this.updateCoins, this);
-        level.events.on('scoreChanged', this.updateScore, this);
-        level.events.on('livesChanged', this.updateLives, this);
-
-        // add timer
-        this.timer = this.time.addEvent({
-            delay: 1000,
-            callback: this.updateTime,
-            callbackScope: this,
-            loop: true
-        });
+            ["NAME1", this.addText(630, 5, "1. Top 1 server")],
+            ["SCORE1", this.addText(790, 5, "500")],
+            ["NAME2", this.addText(630, 30, "2. Top 1 server")],
+            ["SCORE2", this.addText(790, 30, "400")],
+            ["NAME3", this.addText(630, 55, "3. Top 1 server")],
+            ["SCORE3", this.addText(790, 55, "300")],
+            ["NAME4", this.addText(630, 80, "4. Top 1 server")],
+            ["SCORE4", this.addText(790, 80, "200")],
+            ["NAME5", this.addText(630, 105, "5. Top 1 server")],
+            ["SCORE5", this.addText(790, 105, "100")]
+        ])
     }
 
-    private addText(
-        x: number,
-        y: number,
-        value: string
-    ): Phaser.GameObjects.BitmapText {
-        return this.add.bitmapText(x, y, 'font', value, 30);
+    private createVariables() {
+        this.rankingBoard = {}
+        this.totalFish = 0
     }
 
-    private updateTime() {
-        this.registry.values.time -= 1;
-        this.textElements.get('TIME').setText(`${this.registry.get('time')}`);
+    private addText(x: number, y: number, value: string) {
+        const text = this.add.text(x, y, value, {
+            fontSize: "20px",
+            fontFamily: "Revalia",
+            align: "center",
+            stroke: "#000000",
+            strokeThickness: 2
+        })
+        return text
     }
 
-    private updateCoins() {
-        this.textElements
-            .get('COINS')
-            .setText(`${this.registry.get('coins')}`)
-            .setX(200 - 8 * (this.registry.get('coins').toString().length - 1));
+    private eventListener() {
+        const game = this.scene.get("GameScene")
+
+        game.events.on(Constants.EVENT_NEW_FISH, this.addNewFish, this)
+        game.events.on(Constants.EVENT_FISH_SCORE, this.checkFishScore, this)
     }
 
-    private updateScore() {
-        this.textElements
-            .get('SCORE')
-            .setText(`${this.registry.get('score')}`)
-            .setX(40 - 8 * (this.registry.get('score').toString().length - 1));
+    private addNewFish(name: string, score: number) {
+        this.rankingBoard[name] = score
+        this.totalFish += 1
+
+        if (this.totalFish == 5) {
+            this.initBoard()
+        }
     }
 
-    private updateLives() {
-        this.textElements
-            .get('LIVES')
-            .setText(`Lives: ${this.registry.get('lives')}`);
+    private initBoard() {
+        let fishes: (string | number)[][] = Object.keys(this.rankingBoard).map(
+            (key: string) => {
+                return [key, this.rankingBoard[key]]
+            }
+        )
+        fishes.sort(function (first: any, second: any) {
+            return second[1] - first[1]
+        })
+
+        this.leaders = fishes
+
+        for (let i = 0; i < 5; i++) {
+            const name = "NAME" + (i + 1)
+            const score = "SCORE" + (i + 1)
+            // @ts-ignore
+            this.textElements.get(name).setText(fishes[i][0])
+            // @ts-ignore
+            this.textElements.get(score).setText(fishes[i][1])
+        }
+    }
+
+    private checkFishScore(name: string, score: number) {
+        this.rankingBoard[name] = score
+        if (score > this.leaders[4][1]) {
+            this.updateBoard()
+        }
+    }
+
+    private updateBoard() {
+        let fishes: (string | number)[][] = Object.keys(this.rankingBoard).map(
+            (key: string) => {
+                return [key, this.rankingBoard[key]]
+            }
+        )
+        fishes.sort(function (first: any, second: any) {
+            return second[1] - first[1]
+        })
+
+        this.leaders = fishes
+
+        for (let i = 0; i < 5; i++) {
+            const name = "NAME" + (i + 1)
+            const textName = i + 1 + ". " + fishes[i][0]
+            const score = "SCORE" + (i + 1)
+            const scoreText = fishes[i][1]
+
+            // @ts-ignore
+            this.textElements.get(name).setText(textName)
+            // @ts-ignore
+            this.textElements.get(score).setText(scoreText)
+        }
     }
 }
